@@ -1,11 +1,11 @@
 import { useQuery } from "react-query";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { useState } from "react";
 
 function App() {
   const [list, setList] = useState<any[]>([]);
 
-  useQuery(
+  useQuery<{ dataseries: any[] }, AxiosError>(
     "weather",
     async () => {
       const res = await axios.get(`http://www.7timer.info/bin/astro.php`, {
