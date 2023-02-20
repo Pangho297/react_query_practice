@@ -1,39 +1,62 @@
-import { useQuery } from "react-query";
+import { KeyboardEvent, useState } from "react";
 import axios, { AxiosError } from "axios";
-import { useState } from "react";
+import { useQuery } from "react-query";
+import { DrinkResType } from "./type";
 
 function App() {
-  const [list, setList] = useState<any[]>([]);
+  const [name, setName] = useState<string>("");
+  const [list, setList] = useState<DrinkResType[]>([]);
+  const [search, setSearch] = useState<boolean>(false);
 
-  useQuery<{ dataseries: any[] }, AxiosError>(
-    "weather",
+  const { isLoading } = useQuery<{ drinks: DrinkResType[] }, AxiosError>(
+    "cocktail",
     async () => {
-      const res = await axios.get(`http://www.7timer.info/bin/astro.php`, {
-        params: {
-          let: "37.456328",
-          lon: "126.7053223",
-          lang: "ko",
-          unit: "Metric",
-          output: "json",
-          tzshift: 0,
-        },
-      });
+      const res = await axios.get(
+        `https://www.thecocktaildb.com/api/json/v1/1/search.php`,
+        {
+          params: {
+            s: name,
+          },
+        }
+      );
       return res.data;
     },
     {
       onSuccess: (data) => {
-        setList(data.dataseries);
+        setList(data.drinks);
+        setSearch(false);
       },
+      enabled: search,
     }
   );
 
+  const handleSearch = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      setSearch(true);
+      return;
+    }
+  };
+
   return (
     <div>
-      <ul>
-        {list.map((item, index) => (
-          <li key={index}>{item.cloudcover}</li>
-        ))}
-      </ul>
+      <input
+        type="text"
+        onChange={(e) => setName(e.target.value)}
+        onKeyDown={(e) => handleSearch(e)}
+        value={name}
+      />
+      {isLoading ? (
+        <div>Loading...</div>
+      ) : (
+        <ul>
+          {list?.map((item, index) => (
+            <li key={index}>
+              <div>{item.strDrink}</div>
+              <img src={item.strDrinkThumb} alt="img" />
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
