@@ -1,6 +1,6 @@
-import { KeyboardEvent, useState } from "react";
-import axios, { AxiosError } from "axios";
+import { useState } from "react";
 import { useQuery } from "react-query";
+import { instance as axios } from "./utils/axios";
 import { DrinkResType } from "./type";
 
 function App() {
@@ -8,41 +8,35 @@ function App() {
   const [list, setList] = useState<DrinkResType[]>([]);
   const [search, setSearch] = useState<boolean>(false);
 
-  const { isLoading } = useQuery<{ drinks: DrinkResType[] }, AxiosError>(
-    "cocktail",
-    async () => {
-      const res = await axios.get(
-        `https://www.thecocktaildb.com/api/json/v1/1/search.php`,
-        {
-          params: {
-            s: name,
-          },
-        }
-      );
+  const getCocktail = async (
+    payload: string
+  ): Promise<{ drinks: DrinkResType[] }> => {
+    try {
+      const res = await axios.get(`/search.php`, {
+        params: {
+          s: payload,
+        },
+      });
       return res.data;
-    },
-    {
-      onSuccess: (data) => {
-        setList(data.drinks);
-        setSearch(false);
-      },
-      enabled: search,
-    }
-  );
-
-  const handleSearch = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      setSearch(true);
-      return;
+    } catch (error) {
+      throw error;
     }
   };
+
+  const { isLoading } = useQuery("cocktail", () => getCocktail(name), {
+    onSuccess: (data) => {
+      setList(data.drinks);
+      setSearch(false);
+    },
+    enabled: search,
+  });
 
   return (
     <div>
       <input
         type="text"
         onChange={(e) => setName(e.target.value)}
-        onKeyDown={(e) => handleSearch(e)}
+        onKeyDown={(e) => e.key === "Enter" && setSearch(true)}
         value={name}
       />
       {isLoading ? (

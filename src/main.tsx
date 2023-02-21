@@ -10,6 +10,8 @@ const queryClient = new QueryClient();
 queryClient.setDefaultOptions({
   queries: {
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   },
 });
 
